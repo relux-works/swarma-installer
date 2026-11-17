@@ -1,0 +1,358 @@
+{
+  "note": "Shape vectors for 'swarma release-manifest/0', round 4 (one manifest per release set). ALL vectors here are shape-only: every digest and commit is synthetic, no digest is the digest of a real file, and no vector carries an approved digest. 'expect' is the result of the verifier's SHAPE mode defined in 03-verifier-contract.md: checks V-04 to V-12 on the file bytes, then V-13 and V-14 under the host named by 'host' (default 'host_default'). The closed result set of shape mode is 'shape_ok' plus the refusal codes of V-04 to V-14. 'shape_ok' is a result of shape mode only; it is not a result of the advisory or the authoritative mode, and it never means approved. Every file except index.json, unpack-cases.json and invalid-07 is one line of canonical bytes with no trailing line feed. Round 4 change: invalid-26 now varies exactly one member of valid-01 ('format'); its artifact 'name' is again valid-01's.",
+  "mode": "shape",
+  "host_default": "linux/amd64",
+  "vectors": [
+    {
+      "file": "valid-01-minimal-set.json",
+      "expect": "shape_ok",
+      "rule": "one first-install product and one platform-root product, one linux/amd64 artifact each"
+    },
+    {
+      "file": "valid-02-multi-platform.json",
+      "expect": "shape_ok",
+      "rule": "release-candidate versions; first-install product for both Linux platforms; a platform-root product for all four platforms; on a linux/arm64 host the same file is also shape_ok"
+    },
+    {
+      "file": "valid-03-three-purposes.json",
+      "expect": "shape_ok",
+      "rule": "four products covering the three purposes: first-install, owner-account, platform-root (twice)"
+    },
+    {
+      "file": "invalid-01-unknown-member.json",
+      "expect": "manifest_unknown_member",
+      "check": "V-07",
+      "rule": "unknown member 'channel' at the top level",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-02-duplicate-member.json",
+      "expect": "manifest_duplicate_member",
+      "check": "V-04",
+      "rule": "member 'version' appears twice at the top level; a lenient parser keeps the last one and sees a well-formed document",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-03-missing-member.json",
+      "expect": "manifest_missing_member",
+      "check": "V-08",
+      "rule": "the second product has no 'source_commit'",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-04-wrong-digest-length.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "an artifact 'sha256' has 63 hexadecimal digits",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-05-kind-unknown.json",
+      "expect": "manifest_kind_unknown",
+      "check": "V-06",
+      "rule": "'kind' names a format version the v0 verifier does not know",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-06-platform-unknown.json",
+      "expect": "platform_unknown",
+      "check": "V-09",
+      "rule": "artifact platform 'plan9/amd64' is not in the closed platform set",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-07-not-canonical.json",
+      "expect": "manifest_not_canonical",
+      "check": "V-05",
+      "rule": "the same value as valid-01 with whitespace, unsorted top-level members and a trailing line feed",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-08-product-listed-twice.json",
+      "expect": "product_duplicate",
+      "check": "V-11",
+      "rule": "two product objects name the same product with different versions; nothing says which wins, so the set refuses",
+      "valid_neighbour": "valid-03-three-purposes.json"
+    },
+    {
+      "file": "invalid-09-artifact-name-twice-in-set.json",
+      "expect": "artifact_duplicate",
+      "check": "V-11",
+      "rule": "one artifact name appears under two different products with different digests",
+      "valid_neighbour": "valid-03-three-purposes.json"
+    },
+    {
+      "file": "invalid-10-two-artifacts-one-platform.json",
+      "expect": "artifact_platform_duplicate",
+      "check": "V-11",
+      "rule": "one product lists two artifacts for linux/amd64; selection for a host would match more than one",
+      "valid_neighbour": "valid-02-multi-platform.json"
+    },
+    {
+      "file": "invalid-11-one-digest-two-names.json",
+      "expect": "artifact_digest_duplicate",
+      "check": "V-11",
+      "rule": "the same 'sha256' is listed under two products and two names",
+      "valid_neighbour": "valid-03-three-purposes.json"
+    },
+    {
+      "file": "invalid-12-no-first-install-product.json",
+      "expect": "first_install_product_count",
+      "check": "V-12",
+      "rule": "no product has purpose 'first-install'",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-13-two-first-install-products.json",
+      "expect": "first_install_product_count",
+      "check": "V-12",
+      "rule": "two products have purpose 'first-install'",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-14-format-not-allowed.json",
+      "expect": "artifact_format_not_allowed",
+      "check": "V-12",
+      "rule": "the first-install product carries a 'tar.gz' artifact; that purpose allows only 'deb'",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-15-version-leading-zero.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "product version '01.3.1' has a leading zero; no admissible release tag has one",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-16-version-rc-zero.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "product version '0.3.1-rc.0': release candidates start at 1",
+      "valid_neighbour": "valid-02-multi-platform.json"
+    },
+    {
+      "file": "invalid-17-name-only-dots.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "artifact name '..' does not start with a letter or digit",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-18-size-zero.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "artifact 'size' is 0",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-19-uppercase-digest.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "artifact 'sha256' uses uppercase hexadecimal digits",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-20-no-products.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "'products' is empty; the count bound is 1 to 32 and is tested before the first-install count of V-12",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-21-number-not-shortest-integer.json",
+      "expect": "manifest_not_canonical",
+      "check": "V-05",
+      "rule": "'size' is written 5242880.0; a JSON Schema validator accepts it as an integer, the byte scan refuses it",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-22-no-artifact-for-host.json",
+      "expect": "artifact_missing_for_host",
+      "check": "V-14",
+      "host": "linux/amd64",
+      "rule": "shape is valid, but product 'example-manager' has no linux/amd64 artifact. A set installs whole, so one product without a host artifact refuses the set. On a linux/arm64 host the same file also refuses with the same code, with 'example-installer' as the subject.",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-23-round1-members.json",
+      "expect": "manifest_unknown_member",
+      "check": "V-07",
+      "rule": "a top-level 'dependencies' member in the round 1 shape: per-product manifests and dependencies no longer exist in the format",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-24-first-install-not-linux.json",
+      "expect": "artifact_format_not_allowed",
+      "check": "V-12",
+      "rule": "the first-install product lists a darwin/arm64 artifact; v0 defines a first-install package for Linux platforms only",
+      "valid_neighbour": "valid-02-multi-platform.json"
+    },
+    {
+      "file": "invalid-25-purpose-unknown.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "product purpose 'platform' is not one of the three purpose values",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-26-format-unknown.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "artifact format 'zip' is not 'deb' or 'tar.gz'; round 4: this file varies exactly this one member of valid-01 (its artifact name is valid-01's again)",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-27-source-commit-malformed.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "the second product's 'source_commit' has 39 hexadecimal digits, not 40",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-28-set-label-malformed.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "'set' is 'Example_Set': uppercase letters and an underscore break the label pattern",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-29-no-artifacts.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "the second product's 'artifacts' is empty; the count bound is 1 to 4",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-30-nested-unknown-member.json",
+      "expect": "manifest_unknown_member",
+      "check": "V-07",
+      "rule": "unknown member 'channel' in a product object, not at the top level",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-31-nested-missing-member.json",
+      "expect": "manifest_missing_member",
+      "check": "V-08",
+      "rule": "an artifact object has no 'size'",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-32-platform-wrong-type.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "an artifact 'platform' is the number 1, not a string; V-09 tests strings only, the type rule of V-10 refuses it",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-33-set-version-malformed.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "the set-level 'version' is '0.1', not three numeric parts; the product versions are well formed",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    },
+    {
+      "file": "invalid-34-size-negative.json",
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "rule": "artifact 'size' is -1: canonical shortest-form bytes that pass V-05 and fail the value bound of V-10",
+      "valid_neighbour": "valid-01-minimal-set.json"
+    }
+  ],
+  "schema_expectation": {
+    "note": "What a Draft 2020-12 validator is expected to say about each file under release-manifest-v0.schema.json. Reasoned by hand; the producer ran no validator. Round 4: these two lists are unchanged from round 3 and still name every vector file exactly once; invalid-26's name revert does not change its verdict (its 'format' still fails the enum).",
+    "pass": [
+      "valid-01-minimal-set.json",
+      "valid-02-multi-platform.json",
+      "valid-03-three-purposes.json",
+      "invalid-02-duplicate-member.json",
+      "invalid-07-not-canonical.json",
+      "invalid-08-product-listed-twice.json",
+      "invalid-09-artifact-name-twice-in-set.json",
+      "invalid-10-two-artifacts-one-platform.json",
+      "invalid-11-one-digest-two-names.json",
+      "invalid-21-number-not-shortest-integer.json",
+      "invalid-22-no-artifact-for-host.json"
+    ],
+    "fail": [
+      "invalid-01-unknown-member.json",
+      "invalid-03-missing-member.json",
+      "invalid-04-wrong-digest-length.json",
+      "invalid-05-kind-unknown.json",
+      "invalid-06-platform-unknown.json",
+      "invalid-12-no-first-install-product.json",
+      "invalid-13-two-first-install-products.json",
+      "invalid-14-format-not-allowed.json",
+      "invalid-15-version-leading-zero.json",
+      "invalid-16-version-rc-zero.json",
+      "invalid-17-name-only-dots.json",
+      "invalid-18-size-zero.json",
+      "invalid-19-uppercase-digest.json",
+      "invalid-20-no-products.json",
+      "invalid-23-round1-members.json",
+      "invalid-24-first-install-not-linux.json",
+      "invalid-25-purpose-unknown.json",
+      "invalid-26-format-unknown.json",
+      "invalid-27-source-commit-malformed.json",
+      "invalid-28-set-label-malformed.json",
+      "invalid-29-no-artifacts.json",
+      "invalid-30-nested-unknown-member.json",
+      "invalid-31-nested-missing-member.json",
+      "invalid-32-platform-wrong-type.json",
+      "invalid-33-set-version-malformed.json",
+      "invalid-34-size-negative.json"
+    ]
+  },
+  "not_shipped_as_files": [
+    {
+      "expect": "approved_digest_absent, approved_digest_invalid, approved_digest_untrusted_source",
+      "check": "V-01",
+      "reason": "these depend on how the approved digest is supplied, not on a manifest file; rows with valid neighbours are in 03-verifier-contract.md"
+    },
+    {
+      "expect": "manifest_unreadable, manifest_unprotected, manifest_too_large",
+      "check": "V-02",
+      "reason": "they need a file system object with a given owner, mode, type or link count, or a file larger than 65536 bytes that the implementer generates"
+    },
+    {
+      "expect": "manifest_digest_not_approved",
+      "check": "V-03",
+      "reason": "it needs a computed SHA-256; the producer could compute none. Harness rule: take valid-01, compute its digest D, supply D (expect the run to pass V-03) and supply D with its last digit changed (expect this code)."
+    },
+    {
+      "expect": "manifest_not_canonical",
+      "check": "V-05",
+      "reason": "variants not shipped: a byte-order mark, invalid UTF-8 and a non-ASCII byte need exact bytes the producer could not write or check; an escape sequence in a string, an exponent form (1e3) and container depth 6 are plain ASCII and are left to the implementer's generator, each with valid-01 as the neighbour. A negative integer in shortest form is canonical bytes and is NOT this code: it is invalid-34 (V-10)."
+    },
+    {
+      "expect": "manifest_value_invalid",
+      "check": "V-10",
+      "reason": "bound variants not shipped as files: 33 products, 5 artifacts in one product, a 129-byte name, a 64-byte label, a value above 9007199254740991; each is generated from valid-01"
+    },
+    {
+      "expect": "host_platform_unsupported",
+      "check": "V-13",
+      "reason": "depends on the host, not on the file; harness rule: run valid-01 with host 'darwin/arm64' (expect this code) and with 'linux/amd64' (expect shape_ok)"
+    },
+    {
+      "expect": "first_install_mismatch",
+      "check": "V-19",
+      "reason": "it needs two real files with computed digests, built from real bytes (never a preimage of a synthetic digest, and never by varying a byte-source artifact, which V-18 would refuse first). Harness rule: (1) write a package file P of arbitrary bytes and compute its SHA-256 d and its length; (2) write a canonical manifest M whose first-install product's selected artifact has 'sha256' d and 'size' equal to the length of P (the other products of M may be copied from valid-01 with their own real files, or M is valid-01 with only that artifact's 'sha256' and 'size' replaced by d and the length), compute the set digest of M and supply it as the approved digest; (3) place P in the byte source under the name d, so V-16 to V-18 pass; (4) run authoritative mode with P itself as the protected first-install package copy ('first-install/package'): expect the run to pass V-19; then run it again with P changed in exactly one byte as 'first-install/package' (the byte source still holds the original P under d, so V-18 still passes): expect 'first_install_mismatch' with the first-install product as the subject. Valid neighbour: the same run with the unmodified P as the package copy."
+    },
+    {
+      "expect": "second_build_missing, second_build_mismatch",
+      "check": "V-20",
+      "reason": "they need the second-build comparison record of the test profile (TP-6), whose byte encoding is MISSING (owner: the installer specification), and real artifact digests. Harness rule, in V-20's stated order: an authoritative run over a verified protected directory with no comparison record returns 'second_build_missing'; the same run with a record whose own digest differs from the approved comparison-record digest returns 'second_build_mismatch' before any byte of it is parsed; the same run with an approved record that omits one selected artifact, lists an artifact not in the set, carries a manifest digest for a selected artifact that differs from the manifest, or carries a second-build digest that differs from that manifest digest, returns 'second_build_mismatch' by computation (its equality flag, where the encoding has one, is audit-only: a record that marks an artifact equal while its two digests differ still returns 'second_build_mismatch', and a record whose two digests are equal passes this part even if its flag disagrees); the same run with a complete approved record whose manifest digest and second-build digest are equal for every selected artifact passes V-20. Advisory mode runs the same rule over the account's own copy with the digests typed by the person."
+    },
+    {
+      "expect": "set_too_large, storage_insufficient, artifact_unavailable, artifact_unprotected, artifact_size_mismatch, artifact_digest_mismatch, provenance_missing, provenance_invalid, io_error, record_write_failed, verified, advisory_ok",
+      "check": "V-15 to V-21",
+      "reason": "they need real artifact files, computed digests or a protected directory; each has a row with a valid neighbour in 03-verifier-contract.md. The provenance codes belong to the product profile, which v0 does not define; on the test profile V-20 takes the second-build record instead (TP-6)."
+    },
+    {
+      "expect": "every unpack refusal code",
+      "check": "U-01 to U-14",
+      "reason": "an archive cannot be written without a program; the cases are rows of the unpack table in 03-verifier-contract.md and entries of unpack-cases.json"
+    }
+  ]
+}
+

@@ -1,0 +1,123 @@
+{
+  "note": "Unpack cases for the rules U-01 to U-14 of 03-verifier-contract.md, round 4. These are descriptions, not archives: the producer could run no program and therefore could write no tar.gz file. All of them are shape-only. The implementer builds each archive from the description; 'neighbour' describes the nearest archive that must unpack. In every case the expected outcome also includes: nothing of the archive remains under the final name, and the staging directory of the attempt is removed or reported. Names in U-03 to U-05 mean the EFFECTIVE entry name after pax 'path' records and GNU long-name records are applied; a name record that does not resolve to one effective name refuses under its own rule.",
+  "mode": "shape",
+  "cases": [
+    {
+      "id": "unpack-valid-01",
+      "expect": "unpacked",
+      "archive": "tar.gz with three regular files 'bin/example-manager' (mode 0755), 'LICENSE' and 'README.md' (mode 0644) and one directory entry 'bin/' (a single trailing '/' on a directory entry is allowed by U-05 and is stripped for the component test); total content bytes equal the declared unpacked_size"
+    },
+    {
+      "id": "unpack-invalid-01",
+      "expect": "unpack_copy_changed",
+      "rule": "U-01",
+      "archive": "unpack-valid-01, with one byte of the protected copy changed after the verification record was written",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-02",
+      "expect": "unpack_format_unknown",
+      "rule": "U-02",
+      "archive": "a zip file, or a tar file compressed with a method other than gzip, stored under an artifact whose format is 'tar.gz'",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-03",
+      "expect": "unpack_path_absolute",
+      "rule": "U-03",
+      "archive": "one entry whose effective name is '/etc/example'; a second variant: a plain name with a pax 'path' record that replaces it by an absolute path",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-04",
+      "expect": "unpack_path_traversal",
+      "rule": "U-04",
+      "archive": "one entry whose effective name is '../../.profile'; a second variant: 'bin/../../x'; a third variant: a GNU long-name record that makes the effective name contain '..'",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-05",
+      "expect": "unpack_path_invalid",
+      "rule": "U-05",
+      "archive": "an entry whose effective name has an empty component ('bin//x'), a component '.', a byte outside 0x20 to 0x7e, a backslash, more than 255 bytes, or more than 16 components; a directory entry with two trailing slashes ('bin//') is this code, not the allowed single one",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-06",
+      "expect": "unpack_link_refused",
+      "rule": "U-06",
+      "archive": "a symbolic link entry 'bin/x' pointing to '/etc/passwd'; a second variant: a symbolic link that stays inside the directory; a third variant: a hard link entry",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-07",
+      "expect": "unpack_special_file",
+      "rule": "U-07",
+      "archive": "a character device entry; variants: block device, FIFO, socket, and any tar entry type that is not a regular file or a directory",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-08",
+      "expect": "unpack_mode_refused",
+      "rule": "U-08",
+      "archive": "a regular file entry with the setuid bit; variants: setgid, sticky",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-09",
+      "expect": "unpack_metadata_refused",
+      "rule": "U-09",
+      "archive": "a regular file entry with an extended header that carries 'security.capability'; variants: any other extended attribute, a POSIX ACL record",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-10",
+      "expect": "unpack_entry_duplicate",
+      "rule": "U-10",
+      "archive": "two entries with the same effective name 'bin/example-manager'; a second variant: a file entry 'bin' followed by a file entry 'bin/x'; a third variant: two different raw names whose effective names are equal after a long-name record",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-11",
+      "expect": "unpack_size_exceeded",
+      "rule": "U-11",
+      "archive": "content bytes one larger than the declared unpacked_size; a second variant: a small archive of zero-filled content that inflates past the declared unpacked_size (the write stops at the first byte beyond the bound)",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-12",
+      "expect": "unpack_entry_count_exceeded",
+      "rule": "U-12",
+      "archive": "4097 empty regular file entries",
+      "neighbour": "an archive with 4096 entries whose content fits the declared unpacked_size"
+    },
+    {
+      "id": "unpack-invalid-13",
+      "expect": "unpack_trailing_data",
+      "rule": "U-13",
+      "archive": "unpack-valid-01 followed by a second gzip member or by bytes after the end-of-archive marker",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-14",
+      "expect": "placement_missing",
+      "rule": "U-14",
+      "archive": "unpack-valid-01 without 'bin/example-manager', while the placement table of the plan names that path for this product",
+      "neighbour": "unpack-valid-01"
+    },
+    {
+      "id": "unpack-invalid-15",
+      "expect": "placement_conflict",
+      "rule": "U-14",
+      "archive": "two products, each unpacking cleanly on its own, whose placement rows in the plan name one destination for a file of each; the conflict is between plan rows, and the second product's placement refuses before anything is written to the shared destination",
+      "neighbour": "the same two products with placement rows that name different destinations"
+    },
+    {
+      "id": "unpack-invalid-16",
+      "expect": "unpack_size_exceeded",
+      "rule": "U-11",
+      "archive": "an archive whose total decompressed stream (headers, padding and content together) exceeds the decompressed-stream cap of the limits table while its content bytes stay within the declared unpacked_size; a second variant: one extended-header (pax) record larger than the per-record cap",
+      "neighbour": "unpack-valid-01"
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "release-manifest-v0.schema.json",
+  "title": "Release-set manifest v0",
+  "description": "Shape of one release-set manifest, format 'swarma release-manifest/0', round 4: one object per release set that lists every artifact of every product. Written for the repository relux-works/swarma-installer. This schema checks the parsed value only. It cannot see duplicate member names, member order, whitespace or other byte-level properties, it cannot compare items by one member across the set, and it cannot check that a product version equals an actual release tag or compare an integer against the true safe-integer ceiling in a validator that reads numbers as binary floating point. Those rules are rows of the member table in 02-release-manifest-v0.md and checks V-04, V-05 and V-11 of 03-verifier-contract.md. A document that passes this schema is not thereby a valid manifest, and it is never thereby an approved one: approval is the comparison of the file digest with the digest the owner approved (check V-03).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "products", "set", "version"],
+  "properties": {
+    "kind": {
+      "const": "swarma release-manifest/0"
+    },
+    "products": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/product" },
+      "contains": {
+        "type": "object",
+        "required": ["purpose"],
+        "properties": { "purpose": { "const": "first-install" } }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    "set": { "$ref": "#/$defs/label" },
+    "version": { "$ref": "#/$defs/version" }
+  },
+  "$defs": {
+    "label": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+    },
+    "version": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-rc\\.[1-9][0-9]*)?$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "byte_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifacts", "product", "purpose", "source_commit", "version"],
+      "properties": {
+        "artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "product": { "$ref": "#/$defs/label" },
+        "purpose": {
+          "enum": ["first-install", "owner-account", "platform-root"]
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "version": { "$ref": "#/$defs/version" }
+      },
+      "if": {
+        "required": ["purpose"],
+        "properties": { "purpose": { "const": "first-install" } }
+      },
+      "then": {
+        "properties": {
+          "artifacts": {
+            "items": {
+              "properties": {
+                "format": { "const": "deb" },
+                "platform": { "enum": ["linux/amd64", "linux/arm64"] }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "artifacts": {
+            "items": {
+              "properties": {
+                "format": { "const": "tar.gz" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "name", "platform", "sha256", "size", "unpacked_size"],
+      "properties": {
+        "format": {
+          "enum": ["deb", "tar.gz"]
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$"
+        },
+        "platform": {
+          "enum": ["darwin/amd64", "darwin/arm64", "linux/amd64", "linux/arm64"]
+        },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "size": { "$ref": "#/$defs/byte_count" },
+        "unpacked_size": { "$ref": "#/$defs/byte_count" }
+      }
+    }
+  }
+}
