@@ -26,3 +26,7 @@ after that contract is accepted.
 | Python 3 with `jsonschema` (Draft 2020-12) | Check every vector against the schema | `python3 -c 'import json,jsonschema,pathlib; d=pathlib.Path("contract/installer-v0"); s=json.load(open(d/"release-manifest-v0.schema.json")); jsonschema.Draft202012Validator.check_schema(s); print("schema ok")'`, then validate each vector file and compare each result with the `pass`/`fail` lists of `schema_expectation` in `vectors/index.json` (not with the per-vector `expect`, which is the verifier's shape-mode result; eight invalid vectors pass the schema and are refused only by the verifier). |
 
 Outputs are printed only; nothing is written.
+
+## License
+
+Apache License 2.0; see `LICENSE` and `NOTICE`.
